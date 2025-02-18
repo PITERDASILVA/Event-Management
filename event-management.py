@@ -1,3 +1,6 @@
+import re
+from datetime import datetime
+
 class Event():
     def __init__(self, eventName, date, local, people_list):
         self.eventName = eventName
@@ -17,20 +20,25 @@ class Event():
     
     def list_participants(self):
         for i, person in enumerate(self.people_list, 1):
-            print({person})
+            print(f"{i} - {person}")
 
 
 class People():
     def __init__(self, name, email, phone):
         self.name = name
         self.email = email
-        self.phone = phone
+        self.phone = float(phone)
 
         #inscrição
         #cancelar inscrição
     def __str__(self):
         return f"Name: {self.name}, Email: {self.email}, Phone Number: {self.phone}"
-        
+
+    def __eq__(self, other):
+        if isinstance(other, People):
+            return self.email == other.email
+        return False 
+    
 class Local():
     def __init__(self, localName, localAdress, localCapacity):
         self.localName = localName
@@ -65,7 +73,7 @@ class EventManagement():
 
     def list_events(self):
         for i, event in enumerate(self.events, 1):
-            print(f"{event.eventName} - {event.date}")
+            print(f"{i} - {event.eventName} - {event.date.strftime('%d/%m/%Y')}")
        
     
     def event_details(self, eventName):
@@ -77,10 +85,13 @@ class EventManagement():
                 print("Participants:")
                 event.list_participants()
                 return
-            print("Event not found")
+            
+        print("Event not found")
 
    
-        
+
+def validate_phone(phone_str):
+    return re.match(r'^\d+$', phone_str) is not None
 
 
 def options():
@@ -88,7 +99,7 @@ def options():
     print("1. Buy tickets")
     print("2. Cancel order")
     print("3. Event Details")
-    print("4. New Events")
+    print("4. All Events")
     print("5. Create New Event")
     print("6. Exit")        
 
@@ -101,23 +112,57 @@ def main():
         choice = input("Choose one option: ")
 
         if choice == '1':
+          
+          eventName = input("Enter the event name: ")
+          event_found = False
+          for event in management.events:
+              if event.eventName.lower() == eventName.lower():
+                event_found = True
+                break
+                
+          if not event_found:
+                print("Event Not Found")
+                continue
+          
+          print("Personal Details: ")
           name = input("Name: ")
           email = input("Email:")
-          phone = input("Phone:")
-
+          phone = float(input("Phone:"))
+          while not validate_phone(phone):
+              print("Invalid phone number. Try again.")
+              phone = input("Phone: ")
           personDetails = People(name, email, phone)
-          eventName = input("Enter the event name")
-          for event in management.events:
-            if event.eventName.lower() == eventName.lower():
-                event.add_participant(personDetails)
+          event.add_participant(personDetails)
+          print("Ticket purchased successfully")
+
 
         if choice == '2':
+          eventName = input("Enter the event name: ")
+          event_found = False
+          
+          for event in management.events:
+              if event.eventName.lower() == eventName.lower():
+                  event_found = True
+                  break
+
+          if not event_found:
+                print("Event not found.")
+                continue
+
           name = input("Name: ")
           email = input("Email:")
           phone = input("Phone:")
+          while not validate_phone(phone):
+              print("Invalid phone number. Try again.")
+              phone = input("Phone: ")
+          personDetails = People(name, email, phone)
 
-          management.remove_participant.remove(personDetails)
-          print("Subscription Cancelled")
+          if personDetails in event.people_list:
+                event.remove_participant(personDetails)  
+                print("Subscription Cancelled")  
+          else:
+              print("Participant not found in the event")
+            
 
         if choice == '3':
             eventName = input("Event Name: ")
@@ -125,14 +170,25 @@ def main():
             management.event_details(eventName)
         
         if choice == '4':
-            management.new_event_detail()
+            print("* Events *")
+            management.list_events()
 
         if choice == '5':
             print("New Event")
             print("-----------")
             eventName = input("Event Name:")
-            date = input("Event date: ")
-            local = input("Local date: ")
+            while True:
+                date_str = input("Event Date: ")
+                try:
+                    date = datetime.strptime(date_str, "%d/%m/%Y")
+                    if date < datetime.now():
+                        print("Invalid date format. Try again.")
+                    else:
+                        break
+                except ValueError:
+                    print("Invalid date format. Try again.")
+
+            local = input("Local : ")
             people_list = []
             eventDetails = Event(eventName, date, local, people_list)
             management.create_event(eventDetails)
@@ -140,13 +196,6 @@ def main():
         
         if choice == '6':
             break
-
-        else:
-            print("Not found")
-
-        
-
-
 
 
 if __name__ == '__main__':
