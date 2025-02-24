@@ -1,27 +1,38 @@
-import re
+
 from datetime import datetime
 
 class Event():
-    def __init__(self, eventName, date, local, people_list):
+    def __init__(self, eventName, date, local, ticket_available, ticket_price ,people_list):
         self.eventName = eventName
         self.date = date
         self.local = local
+        self.ticket_available = int(ticket_available)
+        self.ticket_price = int(ticket_price)
         self.people_list = people_list
      
 
         #add participantes
         #remover participantes
         #listar 
+
     def add_participant(self, person):
-        self.people_list.append(person)
+        if self.ticket_available > 0:
+            self.people_list.append(person)
+            self.ticket_available -= 1
+            print(f"Ticket purchased successfully.")
+        else:
+            print("No tickets available")
         
     def remove_participant(self, person):
         self.people_list.remove(person)
+        self.ticket_available += 1
     
     def list_participants(self):
         for i, person in enumerate(self.people_list, 1):
             print(f"{i} - {person}")
 
+    def number_of_participants(self):
+        return len(self.people_list)
 
 class People():
     def __init__(self, name, email, phone):
@@ -78,21 +89,17 @@ class EventManagement():
     
     def event_details(self, eventName):
         for event in self.events:
-            if event.eventName.lower() == eventName.lower():
+            if event.eventName.lower().startswith(eventName.lower()):
                 print(f"Event: {event.eventName}")
-                print(f"Date: {event.date}")
-                print(f"Local {event.local}")
-                print("Participants:")
-                event.list_participants()
-                return
-            
+                print(f"Date: {event.date.strftime('%d/%m/%Y')}")
+                print(f"Local: {event.local}")
+                print(f"Price: ${event.ticket_price} ")
+                print(f"Tickets Available: {event.ticket_available}")
+                print(f"Participants: {event.number_of_participants()}")
+                return   
         print("Event not found")
 
    
-
-def validate_phone(phone_str):
-    return re.match(r'^\d+$', phone_str) is not None
-
 
 def options():
     print("Event Options")
@@ -116,24 +123,23 @@ def main():
           eventName = input("Enter the event name: ")
           event_found = False
           for event in management.events:
-              if event.eventName.lower() == eventName.lower():
+              if event.eventName.lower().startswith(eventName.lower()):
                 event_found = True
+                management.event_details(eventName)
                 break
                 
           if not event_found:
                 print("Event Not Found")
                 continue
           
+          
           print("Personal Details: ")
           name = input("Name: ")
           email = input("Email:")
           phone = float(input("Phone:"))
-          while not validate_phone(phone):
-              print("Invalid phone number. Try again.")
-              phone = input("Phone: ")
           personDetails = People(name, email, phone)
           event.add_participant(personDetails)
-          print("Ticket purchased successfully")
+          
 
 
         if choice == '2':
@@ -141,7 +147,7 @@ def main():
           event_found = False
           
           for event in management.events:
-              if event.eventName.lower() == eventName.lower():
+              if event.eventName.lower().startswith(eventName.lower()):
                   event_found = True
                   break
 
@@ -152,9 +158,6 @@ def main():
           name = input("Name: ")
           email = input("Email:")
           phone = input("Phone:")
-          while not validate_phone(phone):
-              print("Invalid phone number. Try again.")
-              phone = input("Phone: ")
           personDetails = People(name, email, phone)
 
           if personDetails in event.people_list:
@@ -189,8 +192,10 @@ def main():
                     print("Invalid date format. Try again.")
 
             local = input("Local : ")
+            ticket_price = int(input("Price:" ))
+            ticket_available = int(input("Tickets Available: "))
             people_list = []
-            eventDetails = Event(eventName, date, local, people_list)
+            eventDetails = Event(eventName, date, local, ticket_available ,ticket_price,people_list)
             management.create_event(eventDetails)
             print("Event created successfully")
         
